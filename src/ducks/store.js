@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 const userStore = (set, get) => ({
   products: [],
+  cartItems: [],
   token: '',
   info: {
     id: 0,
@@ -12,6 +13,11 @@ const userStore = (set, get) => ({
     email: '',
     birthdate: '',
     password: ''
+  },
+  addCartItem: (cartItem) => {
+    set((state) => ({
+      cartItem: [...state.cartItems, cartItem]
+    }))
   },
   getUserInfo: () => {
     get(state => state.info)

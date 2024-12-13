@@ -7,15 +7,16 @@ import endPointPaths from '../../utils/endpointPath';
 import SearchInput from '../Common/SearchInput';
 import Sipiner from '../Common/Sipiner';
 
-const {getProductsUrl, searchProductsUrl} = endPointPaths;
+const {getProductsUrl, searchProductsUrl, cartItemsUrl} = endPointPaths;
 
-const Home = () => {
+const CartDetail = () => {
 
   const navigate = useNavigate();
   const {info, token} = useStatusStore(state => state);
   const [products, setProducts] = useState([]);
   const [searchValue, setSearchValue] = useState('');
   const [loading, setLoading] = useState(false)
+  const [totalPrice, setTotalPrice] = useState(0);
   useEffect(()=>{
     if (!token) {
       navigate('/');
@@ -25,20 +26,30 @@ const Home = () => {
     navigate('/user-detail')
   }
 
-  const goToMyCart = () => {
-    navigate('/cart')
+  const goHome = () => {
+    navigate('/home')
   }
 
-  const handleGetProducts = useCallback(async()=>{
-    const {data: productsResponse} = await axios.get(getProductsUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-        
-      }
-    })
-    console.log(productsResponse)
-    setProducts(productsResponse);
+  const handleGetProducts = useCallback(async() => {
+    try {
+      let response;
+      response = await axios.get(cartItemsUrl,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+      console.log(response.data)
+      const cartItems = response.data.map(cartItem => ({
+        ...cartItem.product,
+        cartItemId: cartItem.id
+      }))
+      setProducts(cartItems);
+      const totalPrice = cartItems?.reduce((sum, item) => sum + item.price, 0)
+      setTotalPrice(totalPrice)
+    } catch (e) {
+      console.error('error on reques', e.error)
+    }
   }, [token])
 
   useEffect(()=>{
@@ -49,26 +60,6 @@ const Home = () => {
       setLoading(false)
     }
   },[token, searchValue])
-
-  const handleSearch = useCallback(async()=>{
-    try {
-      setLoading(true);
-      const {data: productsResponse} = await axios.get(`${searchProductsUrl}${searchValue}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-          
-        }
-      })
-      console.log(productsResponse)
-      setProducts(productsResponse);
-      console.log(searchValue);
-    } catch (e) {
-      console.log(e)
-    }
-    setLoading(false)
-  }, [searchValue]);
-
 
   return (
     <div className='flex w-full h-auto mt-5'>
@@ -84,21 +75,21 @@ const Home = () => {
               </button>
               <button 
                 className={`bg-blue-500 active:bg-blue-200 text-white text-lg font-bold py-2 rounded-xl px-3`}
-                onClick={()=>goToMyCart()}
+                onClick={()=>goHome()}
               >
-                My Cart
+                Go Home
               </button>
             </div>
           </div>
-          <SearchInput 
-            searchValue={searchValue}
-            setSearchValue={setSearchValue}
-            handleSearch={handleSearch}
-          />
+          <div>
+            <h3 className='text-xl font-semibold'>
+              Total Price: {parseFloat(totalPrice.toFixed(2))}
+            </h3>
+          </div>
           <div className=''>
             {loading && <Sipiner/>}
             {products.map((product, index)=>(
-              <ProductItem key={index} {...product}/>
+              <ProductItem key={index} {...product} isCartItem cartItemId={product.cartItemId} handleCallBack={handleGetProducts}/>
             ))}
           </div>
         </div>
@@ -108,4 +99,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default CartDetail

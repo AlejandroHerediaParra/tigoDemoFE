@@ -5,7 +5,8 @@ const endPointPaths = {
   signInUrl: endPointUrl + 'authentication',
   updateUserUrl: endPointUrl + 'users/',
   getProductsUrl: endPointUrl + 'products',
-  searchProductsUrl: endPointUrl + 'products/search?title='
+  searchProductsUrl: endPointUrl + 'products/search?title=',
+  cartItemsUrl: endPointUrl + 'users/cart/items'
 }
 
 export default endPointPaths;
